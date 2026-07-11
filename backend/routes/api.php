@@ -89,5 +89,108 @@ Route::get('/events/{slug}', function (string $slug) {
     ]);
 });
 
+// ===== BRACKET =====
+// Bracket untuk sebuah division — group by stage untuk display
+Route::get('/divisions/{division}/bracket', function (\App\Models\Division $division) {
+    $matches = \App\Models\MatchModel::where('division_id', $division->id)
+        ->with([
+            'participantA' => fn($q) => $q->select('id', 'name')->with('contingent:id,name'),
+            'participantB' => fn($q) => $q->select('id', 'name')->with('contingent:id,name'),
+            'winner:id',
+        ])
+        ->orderByRaw("CASE round
+            WHEN 'GROUP_STAGE' THEN 1
+            WHEN 'ROUND_OF_16' THEN 2
+            WHEN 'QUARTERFINAL' THEN 3
+            WHEN 'SEMIFINAL' THEN 4
+            WHEN 'THIRD_PLACE' THEN 5
+            WHEN 'FINAL' THEN 6
+            ELSE 7 END")
+        ->orderBy('group_label')
+        ->orderBy('bracket_position')
+        ->get();
+
+    // group by stage
+    $byStage = [];
+    foreach ($matches as $m) {
+        $stage = ($m->group_label && $m->round === 'GROUP_STAGE')
+            ? "Grup {$m->group_label}"
+            : str_replace('_', ' ', $m->round);
+        $byStage[$stage][] = $m;
+    }
+
+    return response()->json([
+        'division' => $division->only(['id', 'discipline', 'age_category', 'gender', 'class_name', 'format']),
+        'stages' => $byStage,
+    ]);
+});
+
+// ===== REGISTER PARTICIPANT (public) =====
+Route::post('/events/{slug}/register', function (string $slug, \Illuminate\Http\Request $request) {
+    $event = \App\Models\Event::where('slug', $slug)->where('is_public', true)->first();
+    if (!$event) {
+        return response()->json(['message' => 'Event tidak ditemukan'], 404);
+    }
+    if (!in_array($event->status, ['REGISTRATION_OPEN', 'DRAFT'])) {
+        return response()->json(['message' => 'Pendaftaran event ini sudah ditutup'], 422);
+    }
+
+    $data = $request->validate([
+        'name' => 'required|string|min:3|max:100',
+        'gender' => 'required|in:PUTRA,PUTRI,MIXED',
+        'birth_date' => 'required|date',
+        'email' => 'nullable|email',
+        'phone' => 'nullable|string|min:8',
+        'contingent_id' => 'required|exists:contingents,id',
+        'division_id' => 'required|exists:divisions,id',
+    ]);
+
+    // cek duplikasi
+    $exists = \App\Models\Participant::where('name', $data['name'])
+        ->where('division_id', $data['division_id'])
+        ->exists();
+    if ($exists) {
+        return response()->json(['message' => 'Peserta sudah terdaftar di kelas ini'], 422);
+    }
+
+    $participant = \App\Models\Participant::create([
+        'event_id' => $event->id,
+        'division_id' => $data['division_id'],
+        'contingent_id' => $data['contingent_id'],
+        'name' => $data['name'],
+        'gender' => $data['gender'],
+        'birth_date' => $data['birth_date'],
+        'email' => $data['email'] ?? null,
+        'phone' => $data['phone'] ?? null,
+        'status' => 'PENDING',
+    ]);
+
+    return response()->json([
+        'message' => 'Pendaftaran berhasil. Status: menunggu verifikasi.',
+        'participant_id' => $participant->id,
+    ], 201);
+});
+
+// ===== EVENTS LIST DETAIL: kontingen + divisions (untuk form register) =====
+Route::get('/events/{slug}/register-form', function (string $slug) {
+    $event = \App\Models\Event::where('slug', $slug)->where('is_public', true)->first();
+    if (!$event) {
+        return response()->json(['message' => 'Event tidak ditemukan'], 404);
+    }
+
+    $divisions = $event->divisions()
+        ->orderBy('discipline')->orderBy('age_category')->orderBy('gender')
+        ->get(['id', 'discipline', 'age_category', 'gender', 'class_name', 'format']);
+
+    $contingents = $event->contingents()->orderBy('name')->get(['id', 'name', 'type']);
+
+    return response()->json([
+        'event' => $event->only(['id', 'name', 'slug', 'status']),
+        'divisions' => $divisions,
+        'contingents' => $contingents,
+        'registration_open' => in_array($event->status, ['REGISTRATION_OPEN', 'DRAFT']),
+    ]);
+});
+
 // Health check
 Route::get('/health', fn() => response()->json(['status' => 'ok', 'time' => now()]));

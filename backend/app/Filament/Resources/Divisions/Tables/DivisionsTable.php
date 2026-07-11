@@ -35,7 +35,11 @@ class DivisionsTable
                     'ROUND_ROBIN' => 'Liga', 'SCORING' => 'Penilaian', 'NON_COMPETITIVE' => 'Non-Kompetitif',
                 ]),
             ])
-            ->actions([\Filament\Tables\Actions\EditAction::make()])
+            ->actions([
+                \App\Filament\Resources\Divisions\Tables\Actions\GenerateBracketAction::make()
+                    ->visible(fn($record) => in_array($record->format, ['FULL_KNOCKOUT', 'GROUP_KNOCKOUT', 'ROUND_ROBIN'])),
+                \Filament\Tables\Actions\EditAction::make(),
+            ])
             ->bulkActions([
                 \Filament\Tables\Actions\BulkActionGroup::make([
                     \Filament\Tables\Actions\DeleteBulkAction::make(),

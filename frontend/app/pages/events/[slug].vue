@@ -204,6 +204,15 @@ useHead({ title: `${event.value.name} — EO Sanasini` });
         </div>
       </section>
 
+      <!-- BRACKET (sport only) -->
+      <section v-if="event.category === 'SPORT' && (event.divisions?.length || 0) > 0" id="bracket">
+        <div class="mb-6">
+          <h2 class="text-2xl font-semibold tracking-tight md:text-3xl">Bracket &amp; Hasil Pertandingan</h2>
+          <p class="mt-1.5 text-sm text-muted-foreground">Pilih kelas untuk melihat bracket</p>
+        </div>
+        <EventsBracketExplorer :divisions="event.divisions" />
+      </section>
+
       <!-- STANDINGS -->
       <section v-if="event.category === 'SPORT'" id="standings">
         <div class="mb-6">

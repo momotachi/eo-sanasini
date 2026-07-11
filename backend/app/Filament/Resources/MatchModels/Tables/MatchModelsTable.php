@@ -31,7 +31,10 @@ class MatchModelsTable
                     'COMPLETED' => 'Selesai', 'BYE' => 'BYE',
                 ]),
             ])
-            ->actions([\Filament\Tables\Actions\EditAction::make()])
+            ->actions([
+                \App\Filament\Resources\MatchModels\Tables\Actions\SetWinnerAction::make(),
+                \Filament\Tables\Actions\EditAction::make(),
+            ])
             ->bulkActions([\Filament\Tables\Actions\BulkActionGroup::make([\Filament\Tables\Actions\DeleteBulkAction::make()])]);
     }
 }
