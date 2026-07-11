@@ -1,0 +1,318 @@
+// EO Sanasini — Event Engine Schema
+// General engine, specific configuration. Lihat docs/PRD.md
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// ORGANIZATION & EVENTS
+// ============================================================
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  tagline   String?
+  about     String?  @db.Text
+  logoUrl   String?
+  website   String?
+  instagram String?
+  email     String?
+  phone     String?
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  events Event[]
+}
+
+enum EventType {
+  CHAMPIONSHIP
+  LEAGUE
+  FESTIVAL
+  MICE
+  OTHER
+}
+
+enum EventStatus {
+  DRAFT
+  REGISTRATION_OPEN
+  UPCOMING
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+model Event {
+  id           String      @id @default(cuid())
+  name         String
+  slug         String      @unique
+  type         EventType
+  status       EventStatus @default(DRAFT)
+  description  String?     @db.Text
+  posterUrl    String?
+  startDate    DateTime
+  endDate      DateTime
+  venue        String?
+  address      String?
+  mapUrl       String?
+  contactName  String?
+  contactPhone String?
+  contactEmail String?
+  isPublic     Boolean     @default(true)
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  config      EventConfig?
+  contingents Contingent[]
+  divisions   Division[]
+  venues      Venue[]
+  schedule    ScheduleItem[]
+  medals      Medal[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+}
+
+// ============================================================
+// EVENT CONFIGURATION (template per event)
+// ============================================================
+
+enum CompetitionFormat {
+  FULL_KNOCKOUT
+  GROUP_KNOCKOUT
+  ROUND_ROBIN
+  SCORING
+  NON_COMPETITIVE
+}
+
+enum RegistrationType {
+  INDIVIDUAL
+  TEAM
+  HYBRID
+}
+
+model EventConfig {
+  id                String           @id @default(cuid())
+  eventId           String           @unique
+  event             Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  registrationType  RegistrationType @default(HYBRID)
+  bronzePerDivision Int              @default(2)
+  ageCategories     Json?
+  disciplines       Json?
+  extraConfig       Json?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+}
+
+// ============================================================
+// CONTINGENT (kontingen: perguruan/provinsi/negara)
+// ============================================================
+
+enum ContingentType {
+  CLUB
+  PROVINCE
+  COUNTRY
+  OTHER
+}
+
+model Contingent {
+  id           String         @id @default(cuid())
+  eventId      String
+  event        Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name         String
+  type         ContingentType @default(CLUB)
+  logoUrl      String?
+  contactName  String?
+  contactPhone String?
+  participants Participant[]
+  medals       Medal[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@unique([eventId, name])
+  @@index([eventId])
+}
+
+// ============================================================
+// DIVISION (pool/class: kategori x gender x kelas x cabang)
+// ============================================================
+
+enum Gender {
+  PUTRA
+  PUTRI
+  MIXED
+}
+
+model Division {
+  id            String             @id @default(cuid())
+  eventId       String
+  event         Event              @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  discipline    String
+  ageCategory   String
+  gender        Gender
+  className     String
+  format        CompetitionFormat  @default(GROUP_KNOCKOUT)
+  scoringConfig Json?
+  participants  Participant[]
+  matches       Match[]
+  medals        Medal[]
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  @@unique([eventId, discipline, ageCategory, gender, className])
+  @@index([eventId])
+}
+
+// ============================================================
+// PARTICIPANT
+// ============================================================
+
+enum ParticipantStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+model Participant {
+  id           String            @id @default(cuid())
+  divisionId   String
+  division     Division          @relation(fields: [divisionId], references: [id], onDelete: Cascade)
+  contingentId String?
+  contingent   Contingent?       @relation(fields: [contingentId], references: [id])
+  name         String
+  gender       Gender
+  birthDate    DateTime?
+  email        String?
+  phone        String?
+  documentUrl  String?
+  seed         Int?
+  status       ParticipantStatus @default(PENDING)
+  meta         Json?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  matchesA      Match[]     @relation("MatchParticipantA")
+  matchesB      Match[]     @relation("MatchParticipantB")
+  winnerMatches Match[]     @relation("MatchWinner")
+  medals        Medal[]
+
+  @@index([divisionId])
+  @@index([contingentId])
+}
+
+// ============================================================
+// MATCH (pertandingan)
+// ============================================================
+
+enum MatchStatus {
+  SCHEDULED
+  ONGOING
+  COMPLETED
+  BYE
+}
+
+enum MatchRound {
+  GROUP_STAGE
+  ROUND_OF_16
+  QUARTERFINAL
+  SEMIFINAL
+  FINAL
+  THIRD_PLACE
+}
+
+model Match {
+  id              String       @id @default(cuid())
+  divisionId      String
+  division        Division     @relation(fields: [divisionId], references: [id], onDelete: Cascade)
+  round           MatchRound
+  bracketPosition Int
+  groupLabel      String?
+  participantAId  String?
+  participantA    Participant? @relation("MatchParticipantA", fields: [participantAId], references: [id])
+  participantBId  String?
+  participantB    Participant? @relation("MatchParticipantB", fields: [participantBId], references: [id])
+  scoreA          Json?
+  scoreB          Json?
+  winnerId        String?
+  winner          Participant? @relation("MatchWinner", fields: [winnerId], references: [id])
+  status          MatchStatus  @default(SCHEDULED)
+  venueId         String?
+  venue           Venue?       @relation(fields: [venueId], references: [id])
+  scheduledAt     DateTime?
+  notes           String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([divisionId])
+  @@index([status])
+}
+
+// ============================================================
+// MEDAL (persist untuk klasemen cepat)
+// ============================================================
+
+enum MedalType {
+  GOLD
+  SILVER
+  BRONZE
+}
+
+model Medal {
+  id            String      @id @default(cuid())
+  eventId       String
+  event         Event       @relation(fields: [eventId], references: [id])
+  divisionId    String
+  division      Division    @relation(fields: [divisionId], references: [id])
+  participantId String
+  participant   Participant @relation(fields: [participantId], references: [id])
+  contingentId  String?
+  contingent    Contingent? @relation(fields: [contingentId], references: [id])
+  type          MedalType
+  discipline    String
+  createdAt     DateTime    @default(now())
+
+  @@unique([divisionId, participantId, type])
+  @@index([eventId])
+  @@index([contingentId])
+}
+
+// ============================================================
+// VENUE & SCHEDULE
+// ============================================================
+
+model Venue {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name      String
+  area      String?
+  matches   Match[]
+  createdAt DateTime @default(now())
+
+  @@unique([eventId, name])
+}
+
+model ScheduleItem {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  time      DateTime
+  title     String
+  venueId   String?
+  division  String?
+  notes     String?
+  createdAt DateTime @default(now())
+
+  @@index([eventId])
+}
