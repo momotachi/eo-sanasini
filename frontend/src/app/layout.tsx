@@ -3,6 +3,7 @@ import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import { Providers } from "@/components/providers";
 
 const sans = Inter({
   subsets: ["latin"],
@@ -37,9 +38,11 @@ export default function RootLayout({
   return (
     <html lang="id" className={`${sans.variable} ${serif.variable}`}>
       <body className="min-h-screen font-sans antialiased">
-        <Navbar />
-        <main>{children}</main>
-        <Footer />
+        <Providers>
+          <Navbar />
+          <main>{children}</main>
+          <Footer />
+        </Providers>
       </body>
     </html>
   );

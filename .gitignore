@@ -1,44 +1,36 @@
-# Dependencies
-node_modules/
+# Laravel
+backend/vendor/
+backend/node_modules/
+backend/.env
+backend/storage/app/private/
+backend/storage/app/public/*
+!backend/storage/app/public/.gitkeep
+backend/storage/framework/cache/data/*
+!backend/storage/framework/cache/data/.gitkeep
+backend/storage/framework/sessions/*
+!backend/storage/framework/sessions/.gitkeep
+backend/storage/framework/views/*
+!backend/storage/framework/views/.gitkeep
+backend/storage/logs/*
+!backend/storage/logs/.gitkeep
+
+# Nuxt
 frontend/node_modules/
+frontend/.nuxt/
+frontend/.output/
+frontend/dist/
+frontend/.env
 
-# Next.js build
-.next/
-out/
-build/
+# DB backup
+*.tar.gz
 
-# Production
-dist/
-
-# Environment
-.env
-.env.local
-.env.*.local
-!.env.example
-
-# PostgreSQL data (kalau run local tanpa volume docker)
-*.sql.bak
-
-# OS
+# OS / IDE
 .DS_Store
 Thumbs.db
-
-# IDE
 .vscode/
 .idea/
-*.swp
-*.swo
 
-# Logs
-*.log
-npm-debug.log*
-
-# Prisma generated (regenerated on install)
-frontend/node_modules/.prisma/
-
-# Vercel
-.vercel
-
-# TypeScript
-*.tsbuildinfo
-next-env.d.ts
+# Old Next.js era (di archive-nextjs branch)
+.next/
+out/
+.env
