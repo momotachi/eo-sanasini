@@ -13,7 +13,7 @@ export async function EventsPreview() {
   });
 
   return (
-    <section id="portfolio" className="py-20 md:py-28">
+    <section id="events" className="py-20 md:py-28">
       <div className="container">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
           <div className="max-w-xl">

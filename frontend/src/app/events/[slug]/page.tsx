@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { DivisionList } from "@/components/event/division-list";
 import { ScheduleTimeline } from "@/components/event/schedule-timeline";
 import { MedalTable, type ContingentStanding } from "@/components/event/medal-table";
+import { BracketExplorer } from "@/components/event/bracket-explorer";
 import {
   Calendar,
   MapPin,
@@ -95,6 +96,8 @@ export default async function EventDetailPage({
   const tabs = [
     { id: "overview", label: "Overview", icon: Target },
     { id: "divisions", label: "Kelas Pertandingan", icon: Trophy },
+    { id: "contingents", label: "Kontingen", icon: Users },
+    { id: "bracket", label: "Bracket", icon: Trophy },
     { id: "schedule", label: "Jadwal", icon: Clock },
     { id: "standings", label: "Klasemen", icon: Users },
   ];
@@ -115,6 +118,17 @@ export default async function EventDetailPage({
             <p className="mt-4 max-w-2xl text-muted-foreground md:text-lg">
               {event.description}
             </p>
+          )}
+
+          {/* CTA daftar */}
+          {(event.status === "REGISTRATION_OPEN" || event.status === "DRAFT") && (
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Button asChild size="lg">
+                <a href={`/events/${event.slug}/register`}>
+                  Daftar Sekarang
+                </a>
+              </Button>
+            </div>
           )}
 
           {/* meta info */}
@@ -229,6 +243,49 @@ export default async function EventDetailPage({
             subtitle="Daftar kelas dan kategori yang dipertandingkan"
           />
           <DivisionList divisions={event.divisions} />
+        </section>
+
+        {/* CONTINGENTS */}
+        <section id="contingents" className="scroll-mt-20">
+          <SectionTitle
+            icon={Users}
+            title="Kontingen Peserta"
+            subtitle={`${event.contingents.length} kontingen terdaftar`}
+          />
+          {event.contingents.length === 0 ? (
+            <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
+              Belum ada kontingen terdaftar.
+            </div>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {event.contingents.map((c) => (
+                <div
+                  key={c.id}
+                  className="flex items-center gap-3 rounded-md border bg-card px-4 py-3"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground font-serif font-semibold">
+                    {c.name.charAt(0)}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="truncate font-medium">{c.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {c.type === "CLUB" ? "Perguruan" : c.type === "PROVINCE" ? "Provinsi" : c.type === "COUNTRY" ? "Negara" : "Lainnya"}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* BRACKET */}
+        <section id="bracket" className="scroll-mt-20">
+          <SectionTitle
+            icon={Trophy}
+            title="Bracket & Hasil Pertandingan"
+            subtitle="Pilih kelas untuk melihat bracket dan hasil"
+          />
+          <BracketExplorer divisions={event.divisions} />
         </section>
 
         {/* SCHEDULE */}
