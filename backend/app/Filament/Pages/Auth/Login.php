@@ -14,7 +14,9 @@ class Login extends BaseLogin
 {
     public function form(Schema $schema): Schema
     {
-        $isDev = true; // sementara: aktif semua env
+        // Pre-fill kredensial HANYA saat env local/testing/development.
+        // Di production field kosong.
+        $isDev = app()->environment('local', 'testing', 'development');
 
         return $schema
             ->schema([
@@ -36,6 +38,9 @@ class Login extends BaseLogin
 
     public function getSubHeading(): ?string
     {
+        if (!app()->environment('local', 'testing', 'development')) {
+            return null;
+        }
         return 'DEV: kredensial superadmin sudah terisi. Klik "Masuk" langsung.';
     }
 }

@@ -6,7 +6,7 @@ Platform web untuk **EO Sanasini** — Event Organizer, MICE & Travel Agency (be
 
 | Layer | Tech | Versi |
 |---|---|---|
-| Backend | Laravel + Filament v4 | PHP 8.5 / Laravel 13 |
+| Backend | Laravel + Filament v4 | PHP 8.3+ / Laravel 13 |
 | Frontend | Nuxt + Vue 3 | Nuxt 4 |
 | Database | PostgreSQL | 16 (Docker) |
 | Process Manager | Supervisor | (sama dgn MES) |

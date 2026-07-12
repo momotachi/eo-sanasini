@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Frontend publik di-handle Nuxt (port 3001).
+// API ada di /api/* (routes/api.php). Admin di /admin (Filament).
+// Route root "/" diarahkan ke /admin.
+Route::redirect('/', '/admin');

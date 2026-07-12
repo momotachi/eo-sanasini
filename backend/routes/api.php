@@ -4,6 +4,7 @@ use App\Models\Event;
 use App\Models\Medal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Validation\Rule;
 
 /*
 |--------------------------------------------------------------------------
@@ -78,7 +79,13 @@ Route::get('/events/{slug}', function (string $slug) {
                 'total' => $medals->count(),
             ];
         })
-        ->sortByDesc('gold')->sortByDesc('silver')->sortByDesc('bronze')
+        ->sortBy(
+            // Olympic medal ordering: gold dominan, tie-break silver, lalu bronze.
+            // Pakai weighted score supaya urutan benar (mis. 2G0S0B > 1G3S0B).
+            fn ($s) => [$s['gold'] * 1000000 + $s['silver'] * 1000 + $s['bronze']],
+            SORT_REGULAR,
+            true, // descending
+        )
         ->values()
         ->map(fn($s, $i) => array_merge($s, ['rank' => $i + 1]));
 
@@ -92,6 +99,11 @@ Route::get('/events/{slug}', function (string $slug) {
 // ===== BRACKET =====
 // Bracket untuk sebuah division — group by stage untuk display
 Route::get('/divisions/{division}/bracket', function (\App\Models\Division $division) {
+    // P3-1: jangan expose division dari event non-publik
+    if (!$division->event?->is_public) {
+        return response()->json(['message' => 'Division tidak ditemukan'], 404);
+    }
+
     $matches = \App\Models\MatchModel::where('division_id', $division->id)
         ->with([
             'participantA' => fn($q) => $q->select('id', 'name')->with('contingent:id,name'),
@@ -141,8 +153,15 @@ Route::post('/events/{slug}/register', function (string $slug, \Illuminate\Http\
         'birth_date' => 'required|date',
         'email' => 'nullable|email',
         'phone' => 'nullable|string|min:8',
-        'contingent_id' => 'required|exists:contingents,id',
-        'division_id' => 'required|exists:divisions,id',
+        // P1-5: scope ke event_id supaya tidak bisa tebak ID dari event lain
+        'contingent_id' => [
+            'required',
+            Rule::exists('contingents', 'id')->where('event_id', $event->id),
+        ],
+        'division_id' => [
+            'required',
+            Rule::exists('divisions', 'id')->where('event_id', $event->id),
+        ],
     ]);
 
     // cek duplikasi
