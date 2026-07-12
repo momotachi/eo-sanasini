@@ -29,6 +29,9 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login(\App\Filament\Pages\Auth\Login::class)
             ->brandName('EO Sanasini')
+            // Mobile-friendly: sidebar bisa di-collapse di desktop, group nav bisa di-collapse
+            ->sidebarCollapsibleOnDesktop()
+            ->collapsibleNavigationGroups()
             ->colors([
                 // Brand gold/bronze EO Sanasini (Professional & Elegant)
                 'primary' => Color::hex('#b8860b'),

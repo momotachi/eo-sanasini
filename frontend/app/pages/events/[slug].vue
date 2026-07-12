@@ -222,8 +222,8 @@ useHead({ title: `${event.value.name} — EO Sanasini` });
         <div v-if="standings.length === 0" class="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
           Belum ada medali yang dibagikan.
         </div>
-        <div v-else class="overflow-hidden rounded-lg border">
-          <table class="w-full text-sm">
+        <div v-else class="overflow-x-auto rounded-lg border">
+          <table class="w-full min-w-[480px] text-sm">
             <thead class="bg-secondary/50">
               <tr class="text-left">
                 <th class="px-4 py-3 font-semibold">#</th>
