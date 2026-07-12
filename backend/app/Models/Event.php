@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Event extends Model
@@ -57,6 +58,15 @@ class Event extends Model
     public function medals(): HasMany
     {
         return $this->hasMany(Medal::class);
+    }
+
+    /**
+     * Match belongs to Division, Division belongs to Event.
+     * Relasi hasManyThrough supaya RelationManager MatchesRelationManager bisa query match dari Event.
+     */
+    public function matches()
+    {
+        return $this->hasManyThrough(MatchModel::class, Division::class);
     }
 
     public function participants(): HasMany

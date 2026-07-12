@@ -39,7 +39,20 @@ class EventResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\ContingentsRelationManager::class,
+            RelationManagers\DivisionsRelationManager::class,
+            RelationManagers\ParticipantsRelationManager::class,
+            RelationManagers\VenuesRelationManager::class,
+            RelationManagers\ScheduleRelationManager::class,
+            RelationManagers\MatchesRelationManager::class,
+            RelationManagers\MedalsRelationManager::class,
+            // Category modules
+            RelationManagers\TenantsRelationManager::class,
+            RelationManagers\StageProgramsRelationManager::class,
+            RelationManagers\SpeakersRelationManager::class,
+            RelationManagers\SessionsRelationManager::class,
+            RelationManagers\TicketTypesRelationManager::class,
+            RelationManagers\ItineraryRelationManager::class,
         ];
     }
 
