@@ -14,7 +14,7 @@ class Event extends Model
     protected $fillable = [
         'organization_id', 'name', 'slug', 'type', 'category', 'modules',
         'status', 'description', 'poster_url', 'start_date', 'end_date',
-        'venue', 'address', 'map_url',
+        'venue', 'address', 'map_url', 'latitude', 'longitude', 'map_zoom',
         'contact_name', 'contact_phone', 'contact_email', 'is_public',
     ];
 
@@ -23,7 +23,49 @@ class Event extends Model
         'start_date' => 'datetime',
         'end_date' => 'datetime',
         'is_public' => 'boolean',
+        'latitude' => 'decimal:7',
+        'longitude' => 'decimal:7',
+        'map_zoom' => 'integer',
     ];
+
+    /**
+     * Boot: auto-sync status berdasarkan tanggal + auto-set type dari category.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (Event $event) {
+            // auto-set type dari category kalau kosong atau tidak konsisten
+            $event->type = $event->type ?: match ($event->category) {
+                'SPORT' => 'CHAMPIONSHIP',
+                'FESTIVAL' => 'FESTIVAL',
+                'MICE' => 'MICE',
+                default => 'OTHER',
+            };
+
+            // auto-sync status dari tanggal HANYA jika status masih DRAFT/UPCOMING/ONGOING
+            // (tidak override REGISTRATION_OPEN manual panitia, atau COMPLETED/CANCELLED final)
+            if (in_array($event->status, ['DRAFT', 'UPCOMING', 'ONGOING']) && $event->start_date && $event->end_date) {
+                $now = now();
+                if ($now < $event->start_date) {
+                    $event->status = 'UPCOMING';
+                } elseif ($now >= $event->start_date && $now <= $event->end_date) {
+                    $event->status = 'ONGOING';
+                } else {
+                    $event->status = 'COMPLETED';
+                }
+            }
+        });
+    }
+
+    /**
+     * Slug auto-generate dari name kalau kosong.
+     */
+    public function setSlugAttribute(?string $value): void
+    {
+        $this->attributes['slug'] = $value
+            ? \Illuminate\Support\Str::slug($value)
+            : \Illuminate\Support\Str::slug($this->name);
+    }
 
     public function organization(): BelongsTo
     {
