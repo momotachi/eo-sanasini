@@ -27,7 +27,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
+            ->login(\App\Filament\Pages\Auth\Login::class)
             ->brandName('EO Sanasini')
             ->colors([
                 // Brand gold/bronze EO Sanasini (Professional & Elegant)
