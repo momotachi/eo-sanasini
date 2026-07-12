@@ -29,7 +29,7 @@ class MedalsTable
                 ]),
                 SelectFilter::make('event')->relationship('event', 'name'),
             ])
-            ->actions([\Filament\Tables\Actions\EditAction::make()])
-            ->bulkActions([\Filament\Tables\Actions\BulkActionGroup::make([\Filament\Tables\Actions\DeleteBulkAction::make()])]);
+            ->actions([\Filament\Actions\EditAction::make()])
+            ->bulkActions([\Filament\Actions\BulkActionGroup::make([\Filament\Actions\DeleteBulkAction::make()])]);
     }
 }

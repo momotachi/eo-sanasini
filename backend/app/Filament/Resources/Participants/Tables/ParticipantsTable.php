@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Participants\Tables;
 
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\BulkAction;
+use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -56,17 +56,17 @@ class ParticipantsTable
                     ->visible(fn($record) => $record->status !== 'REJECTED')
                     ->action(fn($record) => $record->update(['status' => 'REJECTED']))
                     ->requiresConfirmation(),
-                \Filament\Tables\Actions\EditAction::make(),
+                \Filament\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                \Filament\Tables\Actions\BulkActionGroup::make([
+                \Filament\Actions\BulkActionGroup::make([
                     BulkAction::make('approveAll')
                         ->label('Setujui semua')
                         ->icon('heroicon-o-check')
                         ->color('success')
                         ->action(fn(Collection $records) => $records->each->update(['status' => 'APPROVED']))
                         ->requiresConfirmation(),
-                    \Filament\Tables\Actions\DeleteBulkAction::make(),
+                    \Filament\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
     }

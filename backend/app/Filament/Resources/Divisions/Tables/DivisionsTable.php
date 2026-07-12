@@ -38,11 +38,11 @@ class DivisionsTable
             ->actions([
                 \App\Filament\Resources\Divisions\Tables\Actions\GenerateBracketAction::make()
                     ->visible(fn($record) => in_array($record->format, ['FULL_KNOCKOUT', 'GROUP_KNOCKOUT', 'ROUND_ROBIN'])),
-                \Filament\Tables\Actions\EditAction::make(),
+                \Filament\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                \Filament\Tables\Actions\BulkActionGroup::make([
-                    \Filament\Tables\Actions\DeleteBulkAction::make(),
+                \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
     }
